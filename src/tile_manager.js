@@ -129,10 +129,10 @@ export default class TileManager {
         //     return Promise.resolve({});
         // }
 
-        if (this.scene.building && !this.scene.building.initial) {
-            // log('debug', `Skip label layout due to on-going scene rebuild`);
-            return Promise.resolve({});
-        }
+        // if (this.scene.building && !this.scene.building.initial) {
+        //     // log('debug', `Skip label layout due to on-going scene rebuild`);
+        //     return Promise.resolve({});
+        // }
 
         // get current visible tiles and sort by key for consistency collision order
         const tiles = this.renderable_tiles

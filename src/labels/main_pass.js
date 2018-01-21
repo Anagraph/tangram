@@ -5,7 +5,17 @@ import Collision from './collision';
 import OBB from '../utils/obb';
 import Geo from '../geo';
 
-export default function mainThreadLabelCollisionPass (tiles, view_zoom) {
+// Current timestamp since mesh load
+const visible_at_float = new Float32Array(1);
+const visible_at = new Uint8Array(visible_at_float.buffer);
+
+const neg_visible_at_float = new Float32Array(1);
+const neg_visible_at = new Uint8Array(neg_visible_at_float.buffer);
+neg_visible_at_float[0] = -1000;
+
+export default function mainThreadLabelCollisionPass (tiles, view_zoom, hide_breach = false) {
+    hide_breach = false;
+
     const labels = {};
     let containers = {};
 
@@ -71,6 +81,7 @@ export default function mainThreadLabelCollisionPass (tiles, view_zoom) {
                                 linked,
                                 ranges,
                                 mesh,
+                                tile,
                                 debug
                             };
                         }
@@ -110,7 +121,10 @@ export default function mainThreadLabelCollisionPass (tiles, view_zoom) {
 
                 let mesh = container.mesh;
                 let off = mesh.vertex_layout.offset.a_shape; // byte offset (within each vertex) of attribute
+                let toff = mesh.vertex_layout.offset.a_visible_at;
                 let stride = mesh.vertex_layout.stride;      // byte stride per vertex
+
+                visible_at_float[0] = ((+new Date()) - mesh.created_at) / 1000; // update timestamp relative to mesh
 
                 for (let i=0; i < r[1]; i++) {
                     // NB: +6 is because attribute is a short int (2 bytes each), and we're skipping to 3rd element, 6=3*2
@@ -119,6 +133,21 @@ export default function mainThreadLabelCollisionPass (tiles, view_zoom) {
                         return; // label hasn't changed states, skip further updates
                     }
                     mesh.vertex_data[r[0] + i * stride + off + 6] = show;
+
+                    if (changed) {
+                        if (!show) { // && container.tile.labeled) { // && container.tile.isProxy()) {
+                            mesh.vertex_data[r[0] + i * stride + toff + 0] = visible_at[0];
+                            mesh.vertex_data[r[0] + i * stride + toff + 1] = visible_at[1];
+                            mesh.vertex_data[r[0] + i * stride + toff + 2] = visible_at[2];
+                            mesh.vertex_data[r[0] + i * stride + toff + 3] = visible_at[3];
+                        }
+                        // else {
+                        //     mesh.vertex_data[r[0] + i * stride + toff + 0] = 0;
+                        //     mesh.vertex_data[r[0] + i * stride + toff + 1] = 0;
+                        //     mesh.vertex_data[r[0] + i * stride + toff + 2] = 0;
+                        //     mesh.vertex_data[r[0] + i * stride + toff + 3] = 0;
+                        // }
+                    }
                 }
 
                 if (meshes.indexOf(mesh) === -1) {
