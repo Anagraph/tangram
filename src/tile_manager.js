@@ -132,20 +132,22 @@ export default class TileManager {
 
         // block some label layout while tiles are loading, except if enough time has passed since last layout
         // const loading = ((this.isLoadingVisibleTiles() && (+new Date() - this.collision.last_time < this.collision.timeout)) || this.scene.building);
-        // const loading = (this.isLoadingVisibleTiles() || this.scene.building);
+        const loading = (this.isLoadingVisibleTiles() || this.scene.building);
+        // const loading = (this.isLoadingVisibleTiles() && (+new Date() - this.collision.last_time < this.collision.timeout));
         // if (loading) {
         //     return Promise.resolve({});
         // }
 
-        if (this.scene.building && !this.scene.building.initial) {
-            // log('debug', `Skip label layout due to on-going scene rebuild`);
-            return Promise.resolve({});
-        }
+        // if (this.scene.building && !this.scene.building.initial) {
+        //     // log('debug', `Skip label layout due to on-going scene rebuild`);
+        //     return Promise.resolve({});
+        // }
 
         // get current visible tiles
         let tiles = this.renderable_tiles
             // .filter(t => !loading || (t.isProxy() && t.proxy_for.length === 1))
             // .filter(t => !loading || t.isProxy())
+            .filter(t => !loading || !t.isProxy())
             .filter(t => t.valid)
             .filter(t => t.built);
 
@@ -154,6 +156,7 @@ export default class TileManager {
             const source_tiles = Object.keys(this.tiles)
                 .map(t => this.tiles[t])
                 .filter(t => t.source.name === source)
+                .filter(t => !loading || !t.isProxy())
                 .filter(t => t.valid)
                 .filter(t => t.visible);
 
